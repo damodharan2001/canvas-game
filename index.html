@@ -1,0 +1,214 @@
+<html>
+  <head>
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+
+  <body>
+    <div class="root">
+      <div class="canvas-container">
+        <canvas id="canvas" width="200" height="200"></canvas>
+      </div>
+    </div>
+  </body>
+  <script>
+    function init() {
+      let snakeWidth = 15;
+      let snakeHeight = 15;
+      let snake = [
+        {
+          x: 500,
+          y: 20,
+        },
+        {
+          x: 500,
+          y: 35,
+        },
+        {
+          x: 500,
+          y: 50,
+        },
+      ];
+
+      function drawSnake(ctx, snake) {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        for (let i = 0; i < snake.length; i++) {
+          let b = snake[i];
+
+          if (i == 0) {
+            ctx.fillStyle = "green";
+          } else {
+            ctx.fillStyle = "red";
+          }
+
+          ctx.fillRect(b.x, b.y, snakeWidth, snakeHeight);
+        }
+      }
+      const canvas = document.getElementById("canvas");
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+
+        drawSnake(ctx, snake);
+
+        function handleControl(e) {
+          let key = e.key;
+
+          let newSnake = [];
+          let prevX;
+          let prevY;
+
+          switch (key) {
+            case "ArrowRight":
+              for (let i = 0; i < snake.length; i++) {
+                let b = snake[i];
+
+                if (i == 0) {
+                  prevX = b.x;
+                  prevY = b.y;
+                  b.x += snakeWidth;
+
+                  if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                    b.x -= snakeWidth;
+                    break;
+                  }
+                  if (b.x >= window.innerWidth) {
+                    b.x -= snakeWidth;
+                    break;
+                  } else if (b.x <= 0) {
+                    b.x -= snakeWidth;
+                    break;
+                  }
+                } else {
+                  let tempX = b.x;
+                  let tempY = b.y;
+                  b.x = prevX;
+                  b.y = prevY;
+
+                  prevX = tempX;
+                  prevY = tempY;
+                }
+
+                newSnake.push(b);
+              }
+
+              if (newSnake.length > 0) {
+                drawSnake(ctx, newSnake);
+              }
+
+              break;
+            case "ArrowLeft":
+              for (let i = 0; i < snake.length; i++) {
+                let b = snake[i];
+
+                if (i == 0) {
+                  prevX = b.x;
+                  prevY = b.y;
+                  b.x -= snakeWidth;
+                  if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                    b.x += snakeWidth;
+                    break;
+                  }
+                  if (b.x >= window.innerWidth) {
+                    b.x += snakeWidth;
+                    break;
+                  } else if (b.x <= 0) {
+                    b.x += snakeWidth;
+                    break;
+                  }
+                } else {
+                  let tempX = b.x;
+                  let tempY = b.y;
+                  b.x = prevX;
+                  b.y = prevY;
+
+                  prevX = tempX;
+                  prevY = tempY;
+                }
+                newSnake.push(b);
+              }
+              if (newSnake.length > 0) {
+                drawSnake(ctx, newSnake);
+              }
+              break;
+            case "ArrowDown":
+              for (let i = 0; i < snake.length; i++) {
+                let b = snake[i];
+                if (i == 0) {
+                  prevX = b.x;
+                  prevY = b.y;
+                  b.y += snakeHeight;
+                  if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                    b.y -= snakeHeight;
+                    break;
+                  }
+                  if (b.y >= window.innerHeight) {
+                    b.y -= snakeHeight;
+                    break;
+                  } else if (b.y <= 0) {
+                    b.y -= snakeHeight;
+                    break;
+                  }
+                } else {
+                  let tempX = b.x;
+                  let tempY = b.y;
+                  b.x = prevX;
+                  b.y = prevY;
+
+                  prevX = tempX;
+                  prevY = tempY;
+                }
+                newSnake.push(b);
+              }
+
+              if (newSnake.length > 0) {
+                drawSnake(ctx, newSnake);
+              }
+
+              break;
+            case "ArrowUp":
+              for (let i = 0; i < snake.length; i++) {
+                let b = snake[i];
+                if (i == 0) {
+                  prevX = b.x;
+                  prevY = b.y;
+                  b.y -= snakeHeight;
+                   if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                    b.y += snakeHeight;
+                    break;
+                  }
+                  if (b.y >= window.innerHeight) {
+                    b.y += snakeHeight;
+                    break;
+                  } else if (b.y <= 0) {
+                    b.y += snakeHeight;
+                    break;
+                  }
+                } else {
+                  let tempX = b.x;
+                  let tempY = b.y;
+                  b.x = prevX;
+                  b.y = prevY;
+
+                  prevX = tempX;
+                  prevY = tempY;
+                }
+                newSnake.push(b);
+              }
+              if (newSnake.length > 0) {
+                drawSnake(ctx, newSnake);
+              }
+              break;
+            default:
+              break;
+          }
+        }
+
+        window.addEventListener("keydown", handleControl);
+      }
+    }
+
+    init();
+  </script>
+</html>
