@@ -6,209 +6,564 @@
 
   <body>
     <div class="root">
-      <div class="canvas-container">
-        <canvas id="canvas" width="200" height="200"></canvas>
+      <div id="gmae-container" class="canvas-container flex flex-col">
+        <div class="canvas-topbar spaceBetweenDiv">
+          <div>
+            <span class="title">Snake Game</span>
+          </div>
+
+          <div class="endDiv" style="width: 50%">
+            <div style="margin-right: 10%" cla>
+              <span class="title"
+                >Points :
+                <span id="points" class="title score">0</span>
+              </span>
+            </div>
+
+            <button id="menu-btn" class="menu-btn btn">Menu</button>
+          </div>
+        </div>
+        <div class="centerDiv w-100 h-100">
+          <canvas id="canvas" width="200" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div id="menu-screen" class="game-start-page centerDiv">
+      <div class="menu-container centerDiv">
+        <button onclick="start_game()" id="start-btn" class="start-btn btn">
+          Start
+        </button>
       </div>
     </div>
   </body>
   <script>
-    function init() {
-      let snakeWidth = 15;
-      let snakeHeight = 15;
+    let startGame = false;
+    let endGame = false;
+    let context;
+    const topBarHeight = 70;
+    const spaceWidth = 50;
+    const snakeSize = 20;
+    let foodSize = 5;
+    let moveInterval;
+    let animInterval;
+    let screenWidth =
+      window.innerWidth -
+      spaceWidth -
+      ((window.innerWidth - spaceWidth) % snakeSize);
+    let screenHeight =
+      window.innerHeight -
+      topBarHeight -
+      ((window.innerHeight - topBarHeight) % snakeSize);
+
+    const canvas = document.getElementById("canvas");
+    if (canvas) {
+      canvas.width = screenWidth;
+      canvas.height = screenHeight;
+      const ctx = canvas.getContext("2d");
+      context = ctx;
+    }
+
+    function gameFunc() {
+      let foodPosX;
+      let foodPosY;
+      let addNew = false;
+      let moveDirection = "+x";
+      const initialSpeed = 200;
+      let speed = initialSpeed;
+
       let snake = [
         {
           x: 500,
-          y: 20,
-        },
-        {
-          x: 500,
-          y: 35,
-        },
-        {
-          x: 500,
-          y: 50,
+          y: 100,
         },
       ];
 
-      function drawSnake(ctx, snake) {
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      function updatePoints() {
+        let pointsDiv = document.getElementById("points");
+        if (pointsDiv) {
+          pointsDiv.innerText = Number(pointsDiv.innerText) + 1;
+        }
+      }
+
+      function drawSnake(context, snake) {
         for (let i = 0; i < snake.length; i++) {
           let b = snake[i];
 
           if (i == 0) {
-            ctx.fillStyle = "green";
+            context.shadowColor = "black";
+            context.shadowBlur = 1;
+            context.fillStyle = "blueviolet";
+            context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
           } else {
-            ctx.fillStyle = "red";
+            context.shadowColor = "blueviolet";
+            context.shadowBlur = 1;
+            context.fillStyle = "greenyellow";
+            context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
           }
-
-          ctx.fillRect(b.x, b.y, snakeWidth, snakeHeight);
         }
       }
-      const canvas = document.getElementById("canvas");
-      if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const ctx = canvas.getContext("2d");
 
-        drawSnake(ctx, snake);
+      function food(x, y) {
+        context.beginPath();
+        context.arc(x, y, foodSize, 0, 2 * Math.PI);
+        context.fillStyle = "brown";
+        context.fill();
+
+        if (startGame) {
+          animInterval = setInterval(() => {
+            context.clearRect(
+              x - foodSize - 1,
+              y - foodSize - 1,
+              foodSize * 2 + 2,
+              foodSize * 2 + 2
+            );
+            foodSize = foodSize == 0 ? foodSize + 5 : 0;
+            context.beginPath();
+            context.arc(x, y, foodSize, 0, 2 * Math.PI);
+            context.fillStyle = "brown";
+            context.fill();
+          }, 300);
+        } else {
+          if (animInterval) {
+            clearInterval(animInterval);
+          }
+        }
+
+        if (endGame) {
+          if (animInterval) {
+            clearInterval(animInterval);
+          }
+        }
+      }
+
+      function setFood() {
+        if (foodPosX && foodPosY) {
+          clearInterval(animInterval);
+          context.clearRect(
+            foodPosX - foodSize - 1,
+            foodPosY - foodSize - 1,
+            foodSize * 2 + 2,
+            foodSize * 2 + 2
+          );
+        }
+        let randomXDigit = Math.max(
+          1,
+          Math.min(3, Math.round(Math.random() * 10))
+        );
+        let randomYDigit = Math.max(
+          1,
+          Math.min(3, Math.round(Math.random() * 10))
+        );
+        let randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
+        let randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
+        randomXNum =
+          randomXNum +
+          (randomXNum % snakeSize < 10
+            ? 10 - ((randomXNum % snakeSize) % 10)
+            : -((randomXNum % snakeSize) % 10));
+        randomYNum =
+          randomYNum +
+          (randomYNum % snakeSize < 10
+            ? 10 - ((randomYNum % snakeSize) % 10)
+            : -((randomYNum % snakeSize) % 10));
+
+        // ---------------- Fitting random number to the screen width -----------------
+        while (randomXNum >= screenWidth || randomXNum <= 0) {
+          randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
+          randomXNum =
+            randomXNum +
+            (randomXNum % snakeSize < 10
+              ? 10 - ((randomXNum % snakeSize) % 10)
+              : -((randomXNum % snakeSize) % 10));
+        }
+
+        // ---------------- Fitting random number to the screen height -----------------
+        while (randomYNum >= screenHeight || randomYNum <= 0) {
+          randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
+          randomYNum =
+            randomYNum +
+            (randomYNum % snakeSize < 10
+              ? 10 - ((randomYNum % snakeSize) % 10)
+              : -((randomYNum % snakeSize) % 10));
+        }
+
+        if (startGame) {
+          foodPosX = randomXNum;
+          foodPosY = randomYNum;
+          food(randomXNum, randomYNum);
+        }
+      }
+
+      if (context) {
+        setFood();
+        drawSnake(context, snake);
+
+        function handleSnakeMoveMent() {
+          if (!endGame) {
+            let newSnake = [];
+            let prevX;
+            let prevY;
+            switch (moveDirection) {
+              case "+x":
+                for (let i = 0; i < snake.length; i++) {
+                  let b = snake[i];
+
+                  if (i == 0) {
+                    prevX = b.x;
+                    prevY = b.y;
+                    b.x += snakeSize;
+
+                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
+                      console.log("===========food touched===============");
+                      updatePoints();
+                      addNew = true;
+                      setFood();
+                      console.log("===========after food===============");
+                    }
+
+                    if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                      b.x -= snakeSize;
+                      break;
+                    }
+                    if (b.x > screenWidth - snakeSize) {
+                      b.x -= snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    } else if (b.x < 0) {
+                      b.x -= snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    }
+                  } else {
+                    let tempX = b.x;
+                    let tempY = b.y;
+                    b.x = prevX;
+                    b.y = prevY;
+
+                    prevX = tempX;
+                    prevY = tempY;
+                  }
+                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                  newSnake.push(b);
+                }
+
+                if (newSnake.length > 0) {
+                  if (addNew) {
+                    snake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    newSnake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    addNew = false;
+                  }
+                  drawSnake(context, newSnake);
+                }
+
+                break;
+              case "-x":
+                for (let i = 0; i < snake.length; i++) {
+                  let b = snake[i];
+
+                  if (i == 0) {
+                    prevX = b.x;
+                    prevY = b.y;
+                    b.x -= snakeSize;
+                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
+                      updatePoints();
+                      addNew = true;
+                      setFood();
+                    }
+
+                    if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                      b.x += snakeSize;
+                      break;
+                    }
+                    if (b.x > screenWidth - snakeSize) {
+                      b.x += snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    } else if (b.x < 0) {
+                      b.x += snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    }
+                  } else {
+                    let tempX = b.x;
+                    let tempY = b.y;
+                    b.x = prevX;
+                    b.y = prevY;
+
+                    prevX = tempX;
+                    prevY = tempY;
+                  }
+                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                  newSnake.push(b);
+                }
+                if (newSnake.length > 0) {
+                  if (addNew) {
+                    snake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    newSnake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    addNew = false;
+                  }
+
+                  drawSnake(context, newSnake);
+                }
+                break;
+              case "+y":
+                for (let i = 0; i < snake.length; i++) {
+                  let b = snake[i];
+                  if (i == 0) {
+                    prevX = b.x;
+                    prevY = b.y;
+                    b.y += snakeSize;
+                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
+                      updatePoints();
+                      addNew = true;
+                      setFood();
+                    }
+
+                    if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                      b.y -= snakeSize;
+                      break;
+                    }
+                    if (b.y > screenHeight - snakeSize) {
+                      b.y -= snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    } else if (b.y < 0) {
+                      b.y -= snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    }
+                  } else {
+                    let tempX = b.x;
+                    let tempY = b.y;
+                    b.x = prevX;
+                    b.y = prevY;
+
+                    prevX = tempX;
+                    prevY = tempY;
+                  }
+                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                  newSnake.push(b);
+                }
+
+                if (newSnake.length > 0) {
+                  if (addNew) {
+                    snake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    newSnake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    addNew = false;
+                  }
+                  drawSnake(context, newSnake);
+                }
+
+                break;
+              case "-y":
+                for (let i = 0; i < snake.length; i++) {
+                  let b = snake[i];
+                  if (i == 0) {
+                    prevX = b.x;
+                    prevY = b.y;
+                    b.y -= snakeSize;
+                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
+                      updatePoints();
+                      addNew = true;
+                      setFood();
+                    }
+                    if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                      b.y += snakeSize;
+                      break;
+                    }
+                    if (b.y > screenHeight - snakeSize) {
+                      b.y += snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    } else if (b.y < 0) {
+                      b.y += snakeSize;
+                      end_game();
+                      endGame = true;
+                      startGame = false;
+                      break;
+                    }
+                  } else {
+                    let tempX = b.x;
+                    let tempY = b.y;
+                    b.x = prevX;
+                    b.y = prevY;
+
+                    prevX = tempX;
+                    prevY = tempY;
+                  }
+                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                  newSnake.push(b);
+                }
+                if (newSnake.length > 0) {
+                  if (addNew) {
+                    snake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    newSnake.push({
+                      x: prevX,
+                      y: prevY,
+                    });
+                    addNew = false;
+                  }
+                  drawSnake(context, newSnake);
+                }
+                break;
+              default:
+                break;
+            }
+
+            requestAnimationFrame(handleSnakeMoveMent);
+          }
+        }
 
         function handleControl(e) {
           let key = e.key;
-
-          let newSnake = [];
-          let prevX;
-          let prevY;
-
           switch (key) {
-            case "ArrowRight":
-              for (let i = 0; i < snake.length; i++) {
-                let b = snake[i];
-
-                if (i == 0) {
-                  prevX = b.x;
-                  prevY = b.y;
-                  b.x += snakeWidth;
-
-                  if (snake.length > 1 && b.x == snake[i + 1]?.x) {
-                    b.x -= snakeWidth;
-                    break;
-                  }
-                  if (b.x >= window.innerWidth) {
-                    b.x -= snakeWidth;
-                    break;
-                  } else if (b.x <= 0) {
-                    b.x -= snakeWidth;
-                    break;
-                  }
-                } else {
-                  let tempX = b.x;
-                  let tempY = b.y;
-                  b.x = prevX;
-                  b.y = prevY;
-
-                  prevX = tempX;
-                  prevY = tempY;
-                }
-
-                newSnake.push(b);
-              }
-
-              if (newSnake.length > 0) {
-                drawSnake(ctx, newSnake);
-              }
-
-              break;
             case "ArrowLeft":
-              for (let i = 0; i < snake.length; i++) {
-                let b = snake[i];
-
-                if (i == 0) {
-                  prevX = b.x;
-                  prevY = b.y;
-                  b.x -= snakeWidth;
-                  if (snake.length > 1 && b.x == snake[i + 1]?.x) {
-                    b.x += snakeWidth;
-                    break;
-                  }
-                  if (b.x >= window.innerWidth) {
-                    b.x += snakeWidth;
-                    break;
-                  } else if (b.x <= 0) {
-                    b.x += snakeWidth;
-                    break;
-                  }
-                } else {
-                  let tempX = b.x;
-                  let tempY = b.y;
-                  b.x = prevX;
-                  b.y = prevY;
-
-                  prevX = tempX;
-                  prevY = tempY;
+              if (snake.length < 1 || snake[0].x - snakeSize != snake[1]?.x) {
+                moveDirection = "-x";
+                if (speed > 0) {
+                  speed -= 100;
                 }
-                newSnake.push(b);
               }
-              if (newSnake.length > 0) {
-                drawSnake(ctx, newSnake);
+              break;
+            case "ArrowRight":
+              if (snake.length < 1 || snake[0].x + snakeSize != snake[1]?.x) {
+                moveDirection = "+x";
+                if (speed > 0) {
+                  speed -= 100;
+                }
+              }
+              break;
+            case "ArrowUp":
+              if (snake.length < 1 || snake[0].y - snakeSize != snake[1]?.y) {
+                moveDirection = "-y";
+                if (speed > 0) {
+                  speed -= 100;
+                }
               }
               break;
             case "ArrowDown":
-              for (let i = 0; i < snake.length; i++) {
-                let b = snake[i];
-                if (i == 0) {
-                  prevX = b.x;
-                  prevY = b.y;
-                  b.y += snakeHeight;
-                  if (snake.length > 1 && b.y == snake[i + 1]?.y) {
-                    b.y -= snakeHeight;
-                    break;
-                  }
-                  if (b.y >= window.innerHeight) {
-                    b.y -= snakeHeight;
-                    break;
-                  } else if (b.y <= 0) {
-                    b.y -= snakeHeight;
-                    break;
-                  }
-                } else {
-                  let tempX = b.x;
-                  let tempY = b.y;
-                  b.x = prevX;
-                  b.y = prevY;
-
-                  prevX = tempX;
-                  prevY = tempY;
+              if (snake.length < 1 || snake[0].y + snakeSize != snake[1]?.y) {
+                moveDirection = "+y";
+                if (speed > 0) {
+                  speed -= 100;
                 }
-                newSnake.push(b);
               }
 
-              if (newSnake.length > 0) {
-                drawSnake(ctx, newSnake);
-              }
-
-              break;
-            case "ArrowUp":
-              for (let i = 0; i < snake.length; i++) {
-                let b = snake[i];
-                if (i == 0) {
-                  prevX = b.x;
-                  prevY = b.y;
-                  b.y -= snakeHeight;
-                   if (snake.length > 1 && b.y == snake[i + 1]?.y) {
-                    b.y += snakeHeight;
-                    break;
-                  }
-                  if (b.y >= window.innerHeight) {
-                    b.y += snakeHeight;
-                    break;
-                  } else if (b.y <= 0) {
-                    b.y += snakeHeight;
-                    break;
-                  }
-                } else {
-                  let tempX = b.x;
-                  let tempY = b.y;
-                  b.x = prevX;
-                  b.y = prevY;
-
-                  prevX = tempX;
-                  prevY = tempY;
-                }
-                newSnake.push(b);
-              }
-              if (newSnake.length > 0) {
-                drawSnake(ctx, newSnake);
-              }
               break;
             default:
               break;
           }
         }
 
+        function handleSpeed(e) {
+          speed = initialSpeed;
+        }
+
         window.addEventListener("keydown", handleControl);
+        window.addEventListener("keyup", handleSpeed);
+
+        if (startGame) {
+          // moveInterval = setInterval(() => {
+          //   handleSnakeMoveMent();
+          // }, speed);
+          handleSnakeMoveMent();
+        } else {
+          if (moveInterval) {
+            clearInterval(moveInterval);
+          }
+        }
+
+        if (endGame) {
+          if (moveInterval) {
+            clearInterval(moveInterval);
+          }
+        }
       }
     }
 
-    init();
+    function start_game() {
+      let menuScreen = document.getElementById("menu-screen");
+      if (menuScreen) {
+        menuScreen.classList.add("hidden");
+      }
+      startGame = true;
+      endGame = false;
+      context.clearRect(0, 0, screenWidth, screenHeight);
+      let pointsDiv = document.getElementById("points");
+      if (pointsDiv) {
+        pointsDiv.innerText = 0;
+      }
+      if (moveInterval) {
+        clearInterval(moveInterval);
+      }
+
+      if (animInterval) {
+        clearInterval(animInterval);
+      }
+      gameFunc();
+    }
+
+    function end_game() {
+      let menuScreen = document.getElementById("menu-screen");
+      if (menuScreen) {
+        menuScreen.classList.remove("hidden");
+      }
+      startGame = false;
+    }
+
+    // ----------------------------- Resizing Function -------------------------
+    function handleResize() {
+      screenWidth =
+        window.innerWidth -
+        spaceWidth -
+        ((window.innerWidth - spaceWidth) % snakeSize);
+      screenHeight =
+        window.innerHeight -
+        topBarHeight -
+        ((window.innerHeight - topBarHeight) % snakeSize);
+
+      const canvas = document.getElementById("canvas");
+      if (canvas) {
+        canvas.width = screenWidth;
+        canvas.height = screenHeight;
+      }
+    }
+    window.addEventListener("resize", handleResize);
   </script>
 </html>
