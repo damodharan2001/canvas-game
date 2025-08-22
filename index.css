@@ -41,6 +41,15 @@ canvas {
   top: 0;
 }
 
+.game-end-page {
+   width: 100%;
+  height: 100vh;
+  background: pink;
+  z-index: 2000;
+  position: fixed;
+  top: 0;
+}
+
 .menu-container {
   background-color: blueviolet;
   width: 30%;
@@ -104,6 +113,14 @@ canvas {
   text-shadow: -2px 1px blueviolet;
 }
 
+.endtitle {
+  font-size: 40px;
+  font-weight: bold;
+  font-style: italic;
+  color: greenyellow;
+  text-shadow: -2px 1px blueviolet;
+}
+
 .score {
   color: blueviolet !important;
   text-shadow: -2px 2px greenyellow !important;
@@ -133,4 +150,26 @@ canvas {
 
 .flex-col {
   flex-direction: column;
+}
+
+
+/* ------------------- Media Query ---------------- */
+@media only screen and (max-width: 768px) {
+  .menu-container {
+    width: 80%;
+  }
+
+  .title{
+    font-size: 18px;
+  }
+
+  .menu-btn{
+    font-size: 18px;
+  }
+
+
+.canvas-topbar {
+  padding-inline: 20px;
+
+}
 }

@@ -1,12 +1,13 @@
 <html>
   <head>
     <title>Snake Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./index.css" />
   </head>
 
   <body>
     <div class="root">
-      <div id="gmae-container" class="canvas-container flex flex-col">
+      <div id="game-container" class="canvas-container flex flex-col">
         <div class="canvas-topbar spaceBetweenDiv">
           <div>
             <span class="title">Snake Game</span>
@@ -29,6 +30,7 @@
       </div>
     </div>
 
+    <!-- Start Menu -->
     <div id="menu-screen" class="game-start-page centerDiv">
       <div class="menu-container centerDiv">
         <button onclick="start_game()" id="start-btn" class="start-btn btn">
@@ -36,15 +38,52 @@
         </button>
       </div>
     </div>
+
+    <!-- End Menu -->
+    <div id="menu-screen-end" class="game-end-page centerDiv hidden">
+      <div class="menu-container centerDiv flex-col">
+        <span class="endtitle"
+          >Points :
+          <span id="end-points" class="endtitle">0</span>
+        </span>
+        <button onclick="start_game()" id="start-btn" class="start-btn btn">
+          Restart
+        </button>
+      </div>
+    </div>
+
+    <!-- Setting Menu -->
+
+    <div id="menu-screen-setting" class="game-end-page centerDiv hidden">
+      <div class="menu-container centerDiv flex-col">
+        <span class="endtitle"
+          >Points :
+          <span id="end-points" class="endtitle">0</span>
+        </span>
+        <button onclick="start_game()" id="start-btn" class="start-btn btn">
+          Restart
+        </button>
+      </div>
+    </div>
+
+    <!-- Audio Effect -->
+    <audio src="./bg.mp3" id="bg-music"></audio>
+    <audio src="./end.mp3" id="end-music"></audio>
+    <audio src="./points.mp3" id="points-music"></audio>
+    <audio src="./change.mp3" id="change-music"></audio>
   </body>
   <script>
     let startGame = false;
     let endGame = false;
     let context;
+    let initialSpeed = 150;
+    let speed = initialSpeed;
+    let elaspeTime = 0;
+    const minSpeed = 50;
     const topBarHeight = 70;
     const spaceWidth = 50;
-    const snakeSize = 20;
-    let foodSize = 5;
+    const snakeSize = 40;
+    let foodSize = Math.round(snakeSize / 4);
     let moveInterval;
     let animInterval;
     let screenWidth =
@@ -55,6 +94,13 @@
       window.innerHeight -
       topBarHeight -
       ((window.innerHeight - topBarHeight) % snakeSize);
+    const startX = Math.round(screenWidth / (snakeSize * 2)) * snakeSize;
+    const startY = Math.round(screenHeight / (snakeSize * 2)) * snakeSize;
+
+    const bgAudio = document.getElementById("bg-music");
+    const endAudio = document.getElementById("end-music");
+    const pointsAudio = document.getElementById("points-music");
+    const changeAudio = document.getElementById("change-music");
 
     const canvas = document.getElementById("canvas");
     if (canvas) {
@@ -69,19 +115,20 @@
       let foodPosY;
       let addNew = false;
       let moveDirection = "+x";
-      const initialSpeed = 200;
-      let speed = initialSpeed;
-
       let snake = [
         {
-          x: 500,
-          y: 100,
+          x: startX,
+          y: startY,
         },
       ];
 
       function updatePoints() {
+        points_audio();
         let pointsDiv = document.getElementById("points");
         if (pointsDiv) {
+          if (Number(pointsDiv.innerText) + (1 % 20)) {
+            initialSpeed += 5;
+          }
           pointsDiv.innerText = Number(pointsDiv.innerText) + 1;
         }
       }
@@ -118,7 +165,7 @@
               foodSize * 2 + 2,
               foodSize * 2 + 2
             );
-            foodSize = foodSize == 0 ? foodSize + 5 : 0;
+            foodSize = foodSize == 0 ? foodSize + Math.round(snakeSize / 4) : 0;
             context.beginPath();
             context.arc(x, y, foodSize, 0, 2 * Math.PI);
             context.fillStyle = "brown";
@@ -138,6 +185,7 @@
       }
 
       function setFood() {
+        let val = snakeSize / 2;
         if (foodPosX && foodPosY) {
           clearInterval(animInterval);
           context.clearRect(
@@ -159,23 +207,23 @@
         let randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
         randomXNum =
           randomXNum +
-          (randomXNum % snakeSize < 10
-            ? 10 - ((randomXNum % snakeSize) % 10)
-            : -((randomXNum % snakeSize) % 10));
+          (randomXNum % snakeSize < val
+            ? val - ((randomXNum % snakeSize) % val)
+            : -((randomXNum % snakeSize) % val));
         randomYNum =
           randomYNum +
-          (randomYNum % snakeSize < 10
-            ? 10 - ((randomYNum % snakeSize) % 10)
-            : -((randomYNum % snakeSize) % 10));
+          (randomYNum % snakeSize < val
+            ? val - ((randomYNum % snakeSize) % val)
+            : -((randomYNum % snakeSize) % val));
 
         // ---------------- Fitting random number to the screen width -----------------
         while (randomXNum >= screenWidth || randomXNum <= 0) {
           randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
           randomXNum =
             randomXNum +
-            (randomXNum % snakeSize < 10
-              ? 10 - ((randomXNum % snakeSize) % 10)
-              : -((randomXNum % snakeSize) % 10));
+            (randomXNum % snakeSize < val
+              ? val - ((randomXNum % snakeSize) % val)
+              : -((randomXNum % snakeSize) % val));
         }
 
         // ---------------- Fitting random number to the screen height -----------------
@@ -183,9 +231,9 @@
           randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
           randomYNum =
             randomYNum +
-            (randomYNum % snakeSize < 10
-              ? 10 - ((randomYNum % snakeSize) % 10)
-              : -((randomYNum % snakeSize) % 10));
+            (randomYNum % snakeSize < val
+              ? val - ((randomYNum % snakeSize) % val)
+              : -((randomYNum % snakeSize) % val));
         }
 
         if (startGame) {
@@ -199,254 +247,276 @@
         setFood();
         drawSnake(context, snake);
 
-        function handleSnakeMoveMent() {
+        function handleSnakeMoveMent(t) {
           if (!endGame) {
-            let newSnake = [];
-            let prevX;
-            let prevY;
-            switch (moveDirection) {
-              case "+x":
-                for (let i = 0; i < snake.length; i++) {
-                  let b = snake[i];
+            if (t - elaspeTime >= speed) {
+              elaspeTime = t;
+              let newSnake = [];
+              let prevX;
+              let prevY;
+              switch (moveDirection) {
+                case "+x":
+                  for (let i = 0; i < snake.length; i++) {
+                    let b = snake[i];
 
-                  if (i == 0) {
-                    prevX = b.x;
-                    prevY = b.y;
-                    b.x += snakeSize;
-
-                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
-                      console.log("===========food touched===============");
-                      updatePoints();
-                      addNew = true;
-                      setFood();
-                      console.log("===========after food===============");
-                    }
-
-                    if (snake.length > 1 && b.x == snake[i + 1]?.x) {
-                      b.x -= snakeSize;
-                      break;
-                    }
-                    if (b.x > screenWidth - snakeSize) {
-                      b.x -= snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    } else if (b.x < 0) {
-                      b.x -= snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    }
-                  } else {
-                    let tempX = b.x;
-                    let tempY = b.y;
-                    b.x = prevX;
-                    b.y = prevY;
-
-                    prevX = tempX;
-                    prevY = tempY;
-                  }
-                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
-                  newSnake.push(b);
-                }
-
-                if (newSnake.length > 0) {
-                  if (addNew) {
-                    snake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    newSnake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    addNew = false;
-                  }
-                  drawSnake(context, newSnake);
-                }
-
-                break;
-              case "-x":
-                for (let i = 0; i < snake.length; i++) {
-                  let b = snake[i];
-
-                  if (i == 0) {
-                    prevX = b.x;
-                    prevY = b.y;
-                    b.x -= snakeSize;
-                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
-                      updatePoints();
-                      addNew = true;
-                      setFood();
-                    }
-
-                    if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                    if (i == 0) {
+                      prevX = b.x;
+                      prevY = b.y;
                       b.x += snakeSize;
-                      break;
-                    }
-                    if (b.x > screenWidth - snakeSize) {
-                      b.x += snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    } else if (b.x < 0) {
-                      b.x += snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    }
-                  } else {
-                    let tempX = b.x;
-                    let tempY = b.y;
-                    b.x = prevX;
-                    b.y = prevY;
 
-                    prevX = tempX;
-                    prevY = tempY;
+                      if (
+                        b.x + Math.round(snakeSize / 2) == foodPosX &&
+                        b.y + Math.round(snakeSize / 2) == foodPosY
+                      ) {
+                        updatePoints();
+                        addNew = true;
+                        setFood();
+                      }
+
+                      if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                        b.x -= snakeSize;
+                        break;
+                      }
+                      if (b.x > screenWidth - snakeSize) {
+                        b.x -= snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      } else if (b.x < 0) {
+                        b.x -= snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      }
+                    } else {
+                      let tempX = b.x;
+                      let tempY = b.y;
+                      b.x = prevX;
+                      b.y = prevY;
+
+                      prevX = tempX;
+                      prevY = tempY;
+                    }
+                    context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                    newSnake.push(b);
                   }
-                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
-                  newSnake.push(b);
-                }
-                if (newSnake.length > 0) {
-                  if (addNew) {
-                    snake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    newSnake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    addNew = false;
+
+                  if (newSnake.length > 0) {
+                    if (addNew) {
+                      snake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      newSnake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      addNew = false;
+                    }
+                    drawSnake(context, newSnake);
                   }
 
-                  drawSnake(context, newSnake);
-                }
-                break;
-              case "+y":
-                for (let i = 0; i < snake.length; i++) {
-                  let b = snake[i];
-                  if (i == 0) {
-                    prevX = b.x;
-                    prevY = b.y;
-                    b.y += snakeSize;
-                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
-                      updatePoints();
-                      addNew = true;
-                      setFood();
-                    }
+                  break;
+                case "-x":
+                  for (let i = 0; i < snake.length; i++) {
+                    let b = snake[i];
 
-                    if (snake.length > 1 && b.y == snake[i + 1]?.y) {
-                      b.y -= snakeSize;
-                      break;
-                    }
-                    if (b.y > screenHeight - snakeSize) {
-                      b.y -= snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    } else if (b.y < 0) {
-                      b.y -= snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    }
-                  } else {
-                    let tempX = b.x;
-                    let tempY = b.y;
-                    b.x = prevX;
-                    b.y = prevY;
+                    if (i == 0) {
+                      prevX = b.x;
+                      prevY = b.y;
+                      b.x -= snakeSize;
+                      if (
+                        b.x + Math.round(snakeSize / 2) == foodPosX &&
+                        b.y + Math.round(snakeSize / 2) == foodPosY
+                      ) {
+                        updatePoints();
+                        addNew = true;
+                        setFood();
+                      }
 
-                    prevX = tempX;
-                    prevY = tempY;
+                      if (snake.length > 1 && b.x == snake[i + 1]?.x) {
+                        b.x += snakeSize;
+                        break;
+                      }
+                      if (b.x > screenWidth - snakeSize) {
+                        b.x += snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      } else if (b.x < 0) {
+                        b.x += snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      }
+                    } else {
+                      let tempX = b.x;
+                      let tempY = b.y;
+                      b.x = prevX;
+                      b.y = prevY;
+
+                      prevX = tempX;
+                      prevY = tempY;
+                    }
+                    context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                    newSnake.push(b);
                   }
-                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
-                  newSnake.push(b);
-                }
-
-                if (newSnake.length > 0) {
-                  if (addNew) {
-                    snake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    newSnake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    addNew = false;
-                  }
-                  drawSnake(context, newSnake);
-                }
-
-                break;
-              case "-y":
-                for (let i = 0; i < snake.length; i++) {
-                  let b = snake[i];
-                  if (i == 0) {
-                    prevX = b.x;
-                    prevY = b.y;
-                    b.y -= snakeSize;
-                    if (b.x + 10 == foodPosX && b.y + 10 == foodPosY) {
-                      updatePoints();
-                      addNew = true;
-                      setFood();
+                  if (newSnake.length > 0) {
+                    if (addNew) {
+                      snake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      newSnake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      addNew = false;
                     }
-                    if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+
+                    drawSnake(context, newSnake);
+                  }
+                  break;
+                case "+y":
+                  for (let i = 0; i < snake.length; i++) {
+                    let b = snake[i];
+                    if (i == 0) {
+                      prevX = b.x;
+                      prevY = b.y;
                       b.y += snakeSize;
-                      break;
-                    }
-                    if (b.y > screenHeight - snakeSize) {
-                      b.y += snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    } else if (b.y < 0) {
-                      b.y += snakeSize;
-                      end_game();
-                      endGame = true;
-                      startGame = false;
-                      break;
-                    }
-                  } else {
-                    let tempX = b.x;
-                    let tempY = b.y;
-                    b.x = prevX;
-                    b.y = prevY;
+                      if (
+                        b.x + Math.round(snakeSize / 2) == foodPosX &&
+                        b.y + Math.round(snakeSize / 2) == foodPosY
+                      ) {
+                        updatePoints();
+                        addNew = true;
+                        setFood();
+                      }
 
-                    prevX = tempX;
-                    prevY = tempY;
+                      if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                        b.y -= snakeSize;
+                        break;
+                      }
+                      if (b.y > screenHeight - snakeSize) {
+                        b.y -= snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      } else if (b.y < 0) {
+                        b.y -= snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      }
+                    } else {
+                      let tempX = b.x;
+                      let tempY = b.y;
+                      b.x = prevX;
+                      b.y = prevY;
+
+                      prevX = tempX;
+                      prevY = tempY;
+                    }
+                    context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                    newSnake.push(b);
                   }
-                  context.clearRect(prevX, prevY, snakeSize, snakeSize);
-                  newSnake.push(b);
-                }
-                if (newSnake.length > 0) {
-                  if (addNew) {
-                    snake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    newSnake.push({
-                      x: prevX,
-                      y: prevY,
-                    });
-                    addNew = false;
+
+                  if (newSnake.length > 0) {
+                    if (addNew) {
+                      snake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      newSnake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      addNew = false;
+                    }
+                    drawSnake(context, newSnake);
                   }
-                  drawSnake(context, newSnake);
-                }
-                break;
-              default:
-                break;
+
+                  break;
+                case "-y":
+                  for (let i = 0; i < snake.length; i++) {
+                    let b = snake[i];
+                    if (i == 0) {
+                      prevX = b.x;
+                      prevY = b.y;
+                      b.y -= snakeSize;
+                      if (
+                        b.x + Math.round(snakeSize / 2) == foodPosX &&
+                        b.y + Math.round(snakeSize / 2) == foodPosY
+                      ) {
+                        updatePoints();
+                        addNew = true;
+                        setFood();
+                      }
+                      if (snake.length > 1 && b.y == snake[i + 1]?.y) {
+                        b.y += snakeSize;
+                        break;
+                      }
+                      if (b.y > screenHeight - snakeSize) {
+                        b.y += snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      } else if (b.y < 0) {
+                        b.y += snakeSize;
+                        end_audio();
+                        end_game();
+                        endGame = true;
+                        startGame = false;
+                        break;
+                      }
+                    } else {
+                      let tempX = b.x;
+                      let tempY = b.y;
+                      b.x = prevX;
+                      b.y = prevY;
+
+                      prevX = tempX;
+                      prevY = tempY;
+                    }
+                    context.clearRect(prevX, prevY, snakeSize, snakeSize);
+                    newSnake.push(b);
+                  }
+                  if (newSnake.length > 0) {
+                    if (addNew) {
+                      snake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      newSnake.push({
+                        x: prevX,
+                        y: prevY,
+                      });
+                      addNew = false;
+                    }
+                    drawSnake(context, newSnake);
+                  }
+                  break;
+                default:
+                  break;
+              }
+            } else if (elaspeTime == 0 && t) {
+              elaspeTime = t + speed;
             }
-
-            requestAnimationFrame(handleSnakeMoveMent);
+            requestAnimationFrame((t) => handleSnakeMoveMent(t));
           }
         }
 
@@ -456,32 +526,36 @@
             case "ArrowLeft":
               if (snake.length < 1 || snake[0].x - snakeSize != snake[1]?.x) {
                 moveDirection = "-x";
-                if (speed > 0) {
-                  speed -= 100;
+                change_audio();
+                if (speed > minSpeed) {
+                  speed -= 5;
                 }
               }
               break;
             case "ArrowRight":
               if (snake.length < 1 || snake[0].x + snakeSize != snake[1]?.x) {
                 moveDirection = "+x";
-                if (speed > 0) {
-                  speed -= 100;
+                change_audio();
+                if (speed > minSpeed) {
+                  speed -= 5;
                 }
               }
               break;
             case "ArrowUp":
               if (snake.length < 1 || snake[0].y - snakeSize != snake[1]?.y) {
                 moveDirection = "-y";
-                if (speed > 0) {
-                  speed -= 100;
+                change_audio();
+                if (speed > minSpeed) {
+                  speed -= 5;
                 }
               }
               break;
             case "ArrowDown":
               if (snake.length < 1 || snake[0].y + snakeSize != snake[1]?.y) {
                 moveDirection = "+y";
-                if (speed > 0) {
-                  speed -= 100;
+                change_audio();
+                if (speed > minSpeed) {
+                  speed -= 5;
                 }
               }
 
@@ -499,9 +573,6 @@
         window.addEventListener("keyup", handleSpeed);
 
         if (startGame) {
-          // moveInterval = setInterval(() => {
-          //   handleSnakeMoveMent();
-          // }, speed);
           handleSnakeMoveMent();
         } else {
           if (moveInterval) {
@@ -522,6 +593,18 @@
       if (menuScreen) {
         menuScreen.classList.add("hidden");
       }
+
+      let endScreen = document.getElementById("menu-screen-end");
+      if (endScreen) {
+        endScreen.classList.add("hidden");
+      }
+
+      if (bgAudio) {
+        bgAudio.volume = 0.2;
+        bgAudio.loop = true;
+        bgAudio.play();
+      }
+
       startGame = true;
       endGame = false;
       context.clearRect(0, 0, screenWidth, screenHeight);
@@ -539,8 +622,41 @@
       gameFunc();
     }
 
+    function end_audio() {
+      if (endAudio) {
+        endAudio.play();
+      }
+
+      if (bgAudio) {
+        bgAudio.pause();
+      }
+    }
+
+    function change_audio() {
+      if (changeAudio) {
+        changeAudio.currentTime = 0;
+        changeAudio.volume = 0.5
+        changeAudio.play();
+      }
+    }
+
+    function points_audio() {
+      if (pointsAudio) {
+        pointsAudio.currentTime = 0;
+        pointsAudio.play();
+      }
+    }
+
     function end_game() {
-      let menuScreen = document.getElementById("menu-screen");
+      let endPoints = document.getElementById("end-points");
+      let pointsDiv = document.getElementById("points");
+      if (pointsDiv) {
+        if (endPoints) {
+          endPoints.innerText = Number(pointsDiv.innerText);
+        }
+      }
+
+      let menuScreen = document.getElementById("menu-screen-end");
       if (menuScreen) {
         menuScreen.classList.remove("hidden");
       }
