@@ -21,7 +21,9 @@
               </span>
             </div>
 
-            <button id="menu-btn" class="menu-btn btn">Menu</button>
+            <button onclick="pause_game()" id="menu-btn" class="menu-btn btn">
+              Setting
+            </button>
           </div>
         </div>
         <div class="centerDiv w-100 h-100">
@@ -35,6 +37,18 @@
       <div class="menu-container centerDiv">
         <button onclick="start_game()" id="start-btn" class="start-btn btn">
           Start
+        </button>
+      </div>
+    </div>
+
+    <!-- Setting Menu -->
+    <div id="menu-screen-setting" class="game-end-page centerDiv hidden">
+      <div class="menu-container centerDiv flex-col">
+        <button onclick="resume_game()" id="start-btn" class="start-btn btn">
+          Resume
+        </button>
+        <button onclick="start_game()" id="start-btn" class="start-btn btn">
+          Restart
         </button>
       </div>
     </div>
@@ -75,6 +89,7 @@
   <script>
     let startGame = false;
     let endGame = false;
+    let pauseGame = false;
     let context;
     let initialSpeed = 150;
     let speed = initialSpeed;
@@ -83,6 +98,8 @@
     const topBarHeight = 70;
     const spaceWidth = 50;
     const snakeSize = 40;
+    let pauseDirectionAudio = false;
+    let foodSet = false;
     let foodSize = Math.round(snakeSize / 4);
     let moveInterval;
     let animInterval;
@@ -110,145 +127,148 @@
       context = ctx;
     }
 
-    function gameFunc() {
-      let foodPosX;
-      let foodPosY;
-      let addNew = false;
-      let moveDirection = "+x";
-      let snake = [
-        {
-          x: startX,
-          y: startY,
-        },
-      ];
+    let foodPosX;
+    let foodPosY;
+    let addNew = false;
+    let moveDirection = "+x";
+    let snake = [
+      {
+        x: startX,
+        y: startY,
+      },
+    ];
 
-      function updatePoints() {
-        points_audio();
-        let pointsDiv = document.getElementById("points");
-        if (pointsDiv) {
-          if (Number(pointsDiv.innerText) + (1 % 20)) {
-            initialSpeed += 5;
-          }
-          pointsDiv.innerText = Number(pointsDiv.innerText) + 1;
+    function updatePoints() {
+      points_audio();
+      let pointsDiv = document.getElementById("points");
+      if (pointsDiv) {
+        if (Number(pointsDiv.innerText) + (1 % 20)) {
+          initialSpeed += 5;
         }
+        pointsDiv.innerText = Number(pointsDiv.innerText) + 1;
       }
+    }
 
-      function drawSnake(context, snake) {
-        for (let i = 0; i < snake.length; i++) {
-          let b = snake[i];
+    function drawSnake(context, snake) {
+      for (let i = 0; i < snake.length; i++) {
+        let b = snake[i];
 
-          if (i == 0) {
-            context.shadowColor = "black";
-            context.shadowBlur = 1;
-            context.fillStyle = "blueviolet";
-            context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
-          } else {
-            context.shadowColor = "blueviolet";
-            context.shadowBlur = 1;
-            context.fillStyle = "greenyellow";
-            context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
-          }
-        }
-      }
-
-      function food(x, y) {
-        context.beginPath();
-        context.arc(x, y, foodSize, 0, 2 * Math.PI);
-        context.fillStyle = "brown";
-        context.fill();
-
-        if (startGame) {
-          animInterval = setInterval(() => {
-            context.clearRect(
-              x - foodSize - 1,
-              y - foodSize - 1,
-              foodSize * 2 + 2,
-              foodSize * 2 + 2
-            );
-            foodSize = foodSize == 0 ? foodSize + Math.round(snakeSize / 4) : 0;
-            context.beginPath();
-            context.arc(x, y, foodSize, 0, 2 * Math.PI);
-            context.fillStyle = "brown";
-            context.fill();
-          }, 300);
+        if (i == 0) {
+          context.shadowColor = "black";
+          context.shadowBlur = 1;
+          context.fillStyle = "blueviolet";
+          context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
         } else {
-          if (animInterval) {
-            clearInterval(animInterval);
-          }
-        }
-
-        if (endGame) {
-          if (animInterval) {
-            clearInterval(animInterval);
-          }
+          context.shadowColor = "blueviolet";
+          context.shadowBlur = 1;
+          context.fillStyle = "greenyellow";
+          context.fillRect(b.x + 1, b.y + 1, snakeSize - 2, snakeSize - 2);
         }
       }
+    }
 
-      function setFood() {
-        let val = snakeSize / 2;
-        if (foodPosX && foodPosY) {
-          clearInterval(animInterval);
+    function food(x, y) {
+      context.beginPath();
+      context.arc(x, y, foodSize, 0, 2 * Math.PI);
+      context.fillStyle = "brown";
+      context.fill();
+
+      if (startGame) {
+        animInterval = setInterval(() => {
           context.clearRect(
-            foodPosX - foodSize - 1,
-            foodPosY - foodSize - 1,
+            x - foodSize - 1,
+            y - foodSize - 1,
             foodSize * 2 + 2,
             foodSize * 2 + 2
           );
+          foodSize = foodSize == 0 ? foodSize + Math.round(snakeSize / 4) : 0;
+          context.beginPath();
+          context.arc(x, y, foodSize, 0, 2 * Math.PI);
+          context.fillStyle = "brown";
+          context.fill();
+        }, 300);
+      } else {
+        if (animInterval) {
+          clearInterval(animInterval);
         }
-        let randomXDigit = Math.max(
-          1,
-          Math.min(3, Math.round(Math.random() * 10))
+      }
+
+      if (endGame) {
+        if (animInterval) {
+          clearInterval(animInterval);
+        }
+      }
+    }
+
+    function setFood() {
+      let val = snakeSize / 2;
+      if (foodPosX && foodPosY) {
+        clearInterval(animInterval);
+        context.clearRect(
+          foodPosX - foodSize - 1,
+          foodPosY - foodSize - 1,
+          foodSize * 2 + 2,
+          foodSize * 2 + 2
         );
-        let randomYDigit = Math.max(
-          1,
-          Math.min(3, Math.round(Math.random() * 10))
-        );
-        let randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
-        let randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
+      }
+      let randomXDigit = Math.max(
+        1,
+        Math.min(3, Math.round(Math.random() * 10))
+      );
+      let randomYDigit = Math.max(
+        1,
+        Math.min(3, Math.round(Math.random() * 10))
+      );
+      let randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
+      let randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
+      randomXNum =
+        randomXNum +
+        (randomXNum % snakeSize < val
+          ? val - ((randomXNum % snakeSize) % val)
+          : -((randomXNum % snakeSize) % val));
+      randomYNum =
+        randomYNum +
+        (randomYNum % snakeSize < val
+          ? val - ((randomYNum % snakeSize) % val)
+          : -((randomYNum % snakeSize) % val));
+
+      // ---------------- Fitting random number to the screen width -----------------
+      while (randomXNum >= screenWidth || randomXNum <= 0) {
+        randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
         randomXNum =
           randomXNum +
           (randomXNum % snakeSize < val
             ? val - ((randomXNum % snakeSize) % val)
             : -((randomXNum % snakeSize) % val));
+      }
+
+      // ---------------- Fitting random number to the screen height -----------------
+      while (randomYNum >= screenHeight || randomYNum <= 0) {
+        randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
         randomYNum =
           randomYNum +
           (randomYNum % snakeSize < val
             ? val - ((randomYNum % snakeSize) % val)
             : -((randomYNum % snakeSize) % val));
-
-        // ---------------- Fitting random number to the screen width -----------------
-        while (randomXNum >= screenWidth || randomXNum <= 0) {
-          randomXNum = Math.round(Math.random() * 10 ** randomXDigit);
-          randomXNum =
-            randomXNum +
-            (randomXNum % snakeSize < val
-              ? val - ((randomXNum % snakeSize) % val)
-              : -((randomXNum % snakeSize) % val));
-        }
-
-        // ---------------- Fitting random number to the screen height -----------------
-        while (randomYNum >= screenHeight || randomYNum <= 0) {
-          randomYNum = Math.round(Math.random() * 10 ** randomYDigit);
-          randomYNum =
-            randomYNum +
-            (randomYNum % snakeSize < val
-              ? val - ((randomYNum % snakeSize) % val)
-              : -((randomYNum % snakeSize) % val));
-        }
-
-        if (startGame) {
-          foodPosX = randomXNum;
-          foodPosY = randomYNum;
-          food(randomXNum, randomYNum);
-        }
       }
 
+      if (startGame) {
+        foodPosX = randomXNum;
+        foodPosY = randomYNum;
+        food(randomXNum, randomYNum);
+      }
+    }
+
+    function gameFunc() {
       if (context) {
-        setFood();
-        drawSnake(context, snake);
+        if (!pauseGame && startGame && foodSet) {
+          setFood();
+          drawSnake(context, snake);
+          foodSet = false;
+        }
 
         function handleSnakeMoveMent(t) {
-          if (!endGame) {
+          if (!endGame && !pauseGame) {
             if (t - elaspeTime >= speed) {
               elaspeTime = t;
               let newSnake = [];
@@ -524,41 +544,64 @@
           let key = e.key;
           switch (key) {
             case "ArrowLeft":
+            case "a":
+            case "A":
               if (snake.length < 1 || snake[0].x - snakeSize != snake[1]?.x) {
                 moveDirection = "-x";
-                change_audio();
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
                 if (speed > minSpeed) {
                   speed -= 5;
                 }
               }
               break;
             case "ArrowRight":
+            case "d":
+            case "D":
               if (snake.length < 1 || snake[0].x + snakeSize != snake[1]?.x) {
                 moveDirection = "+x";
-                change_audio();
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
                 if (speed > minSpeed) {
                   speed -= 5;
                 }
               }
               break;
             case "ArrowUp":
+            case "w":
+            case "W":
               if (snake.length < 1 || snake[0].y - snakeSize != snake[1]?.y) {
                 moveDirection = "-y";
-                change_audio();
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
+
                 if (speed > minSpeed) {
                   speed -= 5;
                 }
               }
               break;
             case "ArrowDown":
+            case "s":
+            case "S":
               if (snake.length < 1 || snake[0].y + snakeSize != snake[1]?.y) {
                 moveDirection = "+y";
-                change_audio();
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
                 if (speed > minSpeed) {
                   speed -= 5;
                 }
               }
-
+              break;
+            case " ":
+              pause_game();
               break;
             default:
               break;
@@ -566,6 +609,7 @@
         }
 
         function handleSpeed(e) {
+          pauseDirectionAudio = false;
           speed = initialSpeed;
         }
 
@@ -588,7 +632,40 @@
       }
     }
 
+    function pause_game() {
+      let settingScreen = document.getElementById("menu-screen-setting");
+      if (settingScreen) {
+        settingScreen.classList.remove("hidden");
+        pauseGame = true;
+        gameFunc();
+      }
+    }
+
+    function resume_game() {
+      let settingScreen = document.getElementById("menu-screen-setting");
+      if (settingScreen) {
+        settingScreen.classList.add("hidden");
+        pauseGame = false;
+        if (moveInterval) {
+          clearInterval(moveInterval);
+        }
+        gameFunc();
+      }
+    }
+
     function start_game() {
+      foodPosX = null;
+      foodPosY = null;
+      addNew = false;
+      moveDirection = "+x";
+      foodSet = true;
+      snake = [
+        {
+          x: startX,
+          y: startY,
+        },
+      ];
+      pauseGame = false;
       let menuScreen = document.getElementById("menu-screen");
       if (menuScreen) {
         menuScreen.classList.add("hidden");
@@ -597,6 +674,11 @@
       let endScreen = document.getElementById("menu-screen-end");
       if (endScreen) {
         endScreen.classList.add("hidden");
+      }
+
+      let settingScreen = document.getElementById("menu-screen-setting");
+      if (settingScreen) {
+        settingScreen.classList.add("hidden");
       }
 
       if (bgAudio) {
@@ -619,6 +701,7 @@
       if (animInterval) {
         clearInterval(animInterval);
       }
+
       gameFunc();
     }
 
@@ -635,7 +718,7 @@
     function change_audio() {
       if (changeAudio) {
         changeAudio.currentTime = 0;
-        changeAudio.volume = 0.5
+        changeAudio.volume = 0.5;
         changeAudio.play();
       }
     }
