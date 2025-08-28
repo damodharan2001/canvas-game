@@ -1,8 +1,13 @@
 <html>
   <head>
-    <title>Snake Game</title>
+    <title>Dnake Game</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Dnake is a snake game" />
+    <meta name="keywords" content="Game" />
+    <meta name="author" content="Damodharan" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./index.css" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
   </head>
 
   <body>
@@ -10,7 +15,7 @@
       <div id="game-container" class="canvas-container flex flex-col">
         <div class="canvas-topbar spaceBetweenDiv">
           <div>
-            <span class="title">Snake Game</span>
+            <span class="title">Dnake Game</span>
           </div>
 
           <div class="endDiv" style="width: 50%">
@@ -119,8 +124,8 @@
       window.innerHeight -
       topBarHeight -
       ((window.innerHeight - topBarHeight) % snakeSize);
-    const startX = Math.round(screenWidth / (snakeSize * 2)) * snakeSize;
-    const startY = Math.round(screenHeight / (snakeSize * 2)) * snakeSize;
+    const startX = Math.round(screenWidth / (snakeSize * 4)) * snakeSize;
+    const startY = Math.round(screenHeight / (snakeSize * 4)) * snakeSize;
 
     const bgAudio = document.getElementById("bg-music");
     const endAudio = document.getElementById("end-music");
@@ -157,7 +162,7 @@
       let pointsDiv = document.getElementById("points");
       if (pointsDiv) {
         if (Number(pointsDiv.innerText) + (1 % 20)) {
-          initialSpeed += 5;
+          initialSpeed -= 5;
         }
         pointsDiv.innerText = Number(pointsDiv.innerText) + 1;
       }
