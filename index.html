@@ -47,7 +47,12 @@
         <button onclick="resume_game()" id="start-btn" class="start-btn btn">
           Resume
         </button>
-        <button onclick="start_game()" id="start-btn" class="start-btn btn">
+        <button
+          style="margin-top: 15px"
+          onclick="start_game()"
+          id="start-btn"
+          class="start-btn btn"
+        >
           Restart
         </button>
       </div>
@@ -87,11 +92,12 @@
     <audio src="./change.mp3" id="change-music"></audio>
   </body>
   <script>
+    let highScore;
     let startGame = false;
     let endGame = false;
     let pauseGame = false;
     let context;
-    let initialSpeed = 150;
+    let initialSpeed = 120;
     let speed = initialSpeed;
     let elaspeTime = 0;
     const minSpeed = 50;
@@ -101,6 +107,8 @@
     let pauseDirectionAudio = false;
     let foodSet = false;
     let foodSize = Math.round(snakeSize / 4);
+    let prevTouchX;
+    let prevTouchY;
     let moveInterval;
     let animInterval;
     let screenWidth =
@@ -138,7 +146,13 @@
       },
     ];
 
+    let localScore = localStorage.getItem("high_score");
+
+    if (localScore) {
+    }
+
     function updatePoints() {
+      navigator.vibrate(1000);
       points_audio();
       let pointsDiv = document.getElementById("points");
       if (pointsDiv) {
@@ -616,6 +630,68 @@
         window.addEventListener("keydown", handleControl);
         window.addEventListener("keyup", handleSpeed);
 
+        const handleTouchStart = (e) => {
+          prevTouchX = e.changedTouches[0].clientX;
+          prevTouchY = e.changedTouches[0].clientY;
+        };
+
+        const handleTouchEnd = (e) => {
+          let directionX = prevTouchX - e.changedTouches[0].clientX;
+          let directionY = prevTouchY - e.changedTouches[0].clientY;
+
+          if (Math.abs(directionX) > Math.abs(directionY)) {
+            if (directionX > 0) {
+              if (snake.length < 1 || snake[0].x - snakeSize != snake[1]?.x) {
+                moveDirection = "-x";
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
+                if (speed > minSpeed) {
+                  speed -= 5;
+                }
+              } else {
+                if (snake.length < 1 || snake[0].x + snakeSize != snake[1]?.x) {
+                  moveDirection = "+x";
+                  if (!pauseDirectionAudio) {
+                    pauseDirectionAudio = true;
+                    change_audio();
+                  }
+                  if (speed > minSpeed) {
+                    speed -= 5;
+                  }
+                }
+              }
+            }
+          } else {
+            if (directionY > 0) {
+              if (snake.length < 1 || snake[0].y - snakeSize != snake[1]?.y) {
+                moveDirection = "-y";
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
+
+                if (speed > minSpeed) {
+                  speed -= 5;
+                }
+              }
+            } else {
+              if (snake.length < 1 || snake[0].y + snakeSize != snake[1]?.y) {
+                moveDirection = "+y";
+                if (!pauseDirectionAudio) {
+                  pauseDirectionAudio = true;
+                  change_audio();
+                }
+                if (speed > minSpeed) {
+                  speed -= 5;
+                }
+              }
+            }
+          }
+        };
+        window.addEventListener("touchstart", handleTouchStart);
+        window.addEventListener("touchend", handleTouchEnd);
         if (startGame) {
           handleSnakeMoveMent();
         } else {
